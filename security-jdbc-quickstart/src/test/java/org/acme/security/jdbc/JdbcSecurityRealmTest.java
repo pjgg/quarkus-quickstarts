@@ -4,20 +4,20 @@ import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.core.Is.is;
 
+
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.PortBinding;
+import com.github.dockerjava.api.model.Ports;
+import io.quarkus.test.common.QuarkusTestResource;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import io.quarkus.test.junit.QuarkusTest;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import com.github.dockerjava.api.model.ExposedPort;
-import com.github.dockerjava.api.model.PortBinding;
-import com.github.dockerjava.api.model.Ports;
-
-import io.quarkus.test.junit.QuarkusTest;
 
 @Testcontainers
 @QuarkusTest
@@ -30,10 +30,13 @@ public class JdbcSecurityRealmTest {
             .withUsername("quarkus")
             .withPassword("quarkus")
             .withExposedPorts(5432)
+            .withStartupCheckStrategy(new CustomStartUpStrategy())
+            .waitingFor(new CustomWaitStrategy().withRegEx(".*database system is ready to accept connections.*"))
             .withCreateContainerCmdModifier(cmd -> cmd
                     .withHostName("localhost")
                     .withPortBindings(new PortBinding(Ports.Binding.bindPort(5432), new ExposedPort(5432))))
             .withInitScript("test_user.sql");
+
 
     @Test
     @Order(1)
